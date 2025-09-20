@@ -9,17 +9,17 @@ include<boxCode.scad>
 
 // This file: user-defineable parameters and placement of the two shells for export
 
-
-
 // === Parameters (mm) ===
-screwX = 12;
-screwY = 32;
+// note: screw holes are not placed automatically, see below.
+// They should have at least minimal clearance to the sidewall to prevent weakening the case where the threaded screw boss enters the bottom shell. 
+screwX = 15.9;
+screwY = 35.9;
 geom=[
     ["innerWidth", 40],     // inside width at center (each shell fits a narrow object of this width)
     ["innerLength", 80],    // inside length at center (each shell fits a narrow object of this length)
     ["innerHeight", 20],    // inside height at center (assembled shells fit a narrow object of this height)
-    ["outerRadius", 5],     // radius of corners << min(width, height). Set zero-ish value for square box
-    ["wallThickness", 1],   // width of the walls on every face 
+    ["outerRadius", 1.5],     // radius of corners << min(width, height). Set zero-ish value for square box
+    ["wallThickness", 1.2],   // width of the walls on every face 
 
     ["screwThreadDiam", 2.7],   // screw hole diameter (threaded part)
     ["screwShaftDiam", 3.4],   // screw hole diameter (non-threaded part)
@@ -29,6 +29,8 @@ geom=[
     
     ["infinity", 345],      // "large number" use reasonable value when working with preview
     ["eps", 0.01],           // "small number" for overlapping solids
+    
+    // screws (arbitrary number, user placed. Use ["screwXY", []] for no screws
     ["screwXY", [[screwX, screwY], [-screwX, screwY], [screwX, -screwY], [-screwX, -screwY]]]
     ];
 
