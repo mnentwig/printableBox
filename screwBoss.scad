@@ -84,30 +84,31 @@ module screwBossBottomAdd(geom, prefix){
     inf=get_param(geom, "infinity"); //  large number. Usually common to the design - not prefixed
     eps=get_param(geom, "eps"); //  small number. Usually common to the design - not prefixed    
 
-    fudge = [[0.3, 1.0], [0.4, 0.9], [0.5, 0.88], [0.6, 0.83], [0.7, 0.75], [1, 0.5]];
+    cylRadiusLo = 1/2*(standoffWallThicknessLo+threadDiam+standoffWallThicknessLo);
+    cylRadiusHi = 1/2*(standoffWallThicknessHi+threadDiam+standoffWallThicknessHi);
+    bossPadRadiusDelta = max(0, bossPadRadius - cylRadiusHi);
+    bossPadHeight = bossPadRadiusDelta; // 90-degree circle segment 
     union(){
         // standoff around non-threaded screw section(shank)
         translate([0, 0, headHeight+headWallThickness]) // overlaps one wall thickness into screw head recess
             cylinder(
                 h = shankLength, 
-                r1 = 1/2*(standoffWallThicknessLo+threadDiam+standoffWallThicknessLo),
-                r2 = 1/2*(standoffWallThicknessLo+threadDiam+standoffWallThicknessLo)
+                r1 = cylRadiusLo,
+                r2 = cylRadiusLo
         );
         
         // threaded section
         translate([0, 0, headHeight+headWallThickness+shankLength])
             cylinder(
-                h = bossLength-headHeight-headWallThickness-shankLength, 
-                r1 = 1/2*(standoffWallThicknessLo+threadDiam+standoffWallThicknessLo),
-                r2 = 1/2*(standoffWallThicknessHi+threadDiam+standoffWallThicknessHi)
+                h = bossLength-headHeight-headWallThickness-shankLength-bossPadHeight, 
+                r1 = cylRadiusLo,
+                r2 = cylRadiusHi
         );
 
-        // boss pad
-        for (f = fudge){
-            echo(f[1]);
-            translate([0, 0, bossLength-bossPadRadius*f[0]])
-                cylinder(h = bossPadRadius*f[0], r1=0, r2=bossPadRadius*f[1]);
-        }// for
+        // screw boss pad
+        translate([0, 0, bossLength])
+            rotate([180, 0, 0])
+                standoffFoot(cylRadiusHi, bossPadHeight);
     } // union
 }
 
@@ -143,6 +144,17 @@ module screwBossSub(geom, prefix, x, y){
             sphere(
                 r = bottomSphereRadius);
     } // union
+}
+
+// helper function: Cylinder that curves 90 degrees onto a surface
+module standoffFoot(rCylinder, height){
+    difference(){
+        cylinder(h=height, r=rCylinder+height);
+    translate([0, 0, height])
+        rotate_extrude(angle=360)
+            translate([rCylinder+height, 0, 0])
+                circle(r=height);
+    }; // difference
 }
 
 function get_param(params, key) =

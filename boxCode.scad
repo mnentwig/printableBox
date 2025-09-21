@@ -19,8 +19,10 @@ function boxGeom_dependentFields(geom) =
         wallThickness=get_param(geom, "wallThickness"))
         // === set dependents ===
             concat(geom, 
+                // the "screwBoss" length includes the thickness of the wall on the screw hole side
+                // but not the wall where the screw boss attaches on the inside.
                 [[str(screwBossPrefix, ".bossLength"), 
-                innerHeight + 1*wallThickness]]);
+                innerHeight + wallThickness]]);
 
 module cutoutsXYR(cutoutsXYR, cutoutZ, cutoutThickness){
     for (cutoutXYR = cutoutsXYR){
