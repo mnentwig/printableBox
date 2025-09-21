@@ -46,6 +46,9 @@ geom=[
     // (arbitrary number, user placed because application-dependent. 
     // Use ["screwXY", []] for no screws
     ["screwXY", [[screwX, screwY], [-screwX, screwY], [screwX, -screwY], [-screwX, -screwY]]],
+    
+    ["cutoutsTopXYR", [[0, -25, 10], [0, 25, 10], [-10, 0, 8], [10, 0, 7]]],
+    ["cutoutsBottomXYR", [[0, -25, 13], [0, 25, 12], [6, 0, 10], [-12, 8, 6], [-12, -7, 5]]],
 
     // === system-wide parameters === 
     ["infinity", 345],      // "large number" use reasonable value when working with preview
@@ -71,14 +74,3 @@ if (0){
     translate([0.55*wi, 0, lowerShellThickness])rotate([0, 180, 0]) 
         boxBottom(geom);
 }
-
-
-
-
-//    innerWidth=get_param(geom, "innerWidth"); 
-//    translate([innerWidth*1.8, 0, 0])   // place conveniently side-by-side
-//        rotate([0, 180, 0])             // place conveniently face-down
-//            intersection(){
-//                myCaseBodyWithScrews(geom);       // constructs (again) complete body
-//                boxShellKeeperBottom(geom); // intersection leaves only bottom half
-

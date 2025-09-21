@@ -22,6 +22,18 @@ function boxGeom_dependentFields(geom) =
                 [[str(screwBossPrefix, ".bossLength"), 
                 innerHeight + 2*wallThickness]]);
 
+module cutoutsXYR(cutoutsXYR, cutoutZ, cutoutThickness){
+    for (cutoutXYR = cutoutsXYR){
+        assert(len(cutoutXYR) == 3, "expecting three-field element for cutoutsTopXYR");
+        echo(cutoutXYR);
+        let(cutoutX = cutoutXYR[0], cutoutY = cutoutXYR[1], cutoutR = cutoutXYR[2]){
+            translate([cutoutX, cutoutY, cutoutZ])
+                        linear_extrude(height = cutoutThickness)
+                            circle(r=cutoutR);
+        }; // let
+    }; // for cutout    
+} // module
+
 module boxTop(geom_){
     geom = boxGeom_dependentFields(geom_);
     screwXY=get_param(geom, "screwXY"); 
@@ -29,6 +41,13 @@ module boxTop(geom_){
     wallThickness=get_param(geom, "wallThickness"); 
     screwBossPrefix = get_param(geom, "screwBossPrefix");
     screwBossZ = -innerHeight/2 - wallThickness;
+    eps=get_param(geom, "eps"); 
+
+    cutoutsXYR = get_param(geom, "cutoutsTopXYR");
+    cutoutEps = 0.1;
+    cutoutZ = -innerHeight/2-wallThickness-cutoutEps;
+    cutoutThickness = wallThickness+2*cutoutEps;
+
     difference(){
         // === ADD ===
         intersection(){
@@ -58,7 +77,8 @@ module boxTop(geom_){
                         rotate([0, 180, 0])
                             screwBossSub(geom, screwBossPrefix);            
                 }; // let
-            } // for screw
+            }; // for screw
+            cutoutsXYR(cutoutsXYR, cutoutZ, cutoutThickness);
         } // union (-)    
     }; // difference       
 } // module
@@ -70,6 +90,12 @@ module boxBottom(geom_){
     wallThickness=get_param(geom, "wallThickness"); 
     screwBossPrefix = get_param(geom, "screwBossPrefix");
     screwBossZ = -innerHeight/2 - wallThickness;
+
+    cutoutsXYR = get_param(geom, "cutoutsBottomXYR");
+    cutoutEps = 0.1;
+    cutoutZ = innerHeight/2-cutoutEps;
+    cutoutThickness = wallThickness+2*cutoutEps;
+
     difference(){
         // === ADD ===
         intersection(){
@@ -100,6 +126,7 @@ module boxBottom(geom_){
                             screwBossSub(geom, screwBossPrefix);            
                 }; // let
             } // for screw
+            cutoutsXYR(cutoutsXYR, cutoutZ, cutoutThickness);
         } // union (-)    
     }; // difference       
 } // module
