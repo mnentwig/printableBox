@@ -1,3 +1,4 @@
+use <screwBoss.scad>
 function get_param(params, key) =
     let (tmp = [for (p = params) if (p[0]==key) p[1]])
         len(tmp) == 1 ? tmp[0] : assert(0, str("parameter '", key, "' not found"));
@@ -9,12 +10,120 @@ module bodyBoxPrimitive(innerWidth, innerLength, innerHeight, outerRadius){
 	}
 };
 
-module boxShellKeeperBottomA(geom){
+// internal parameters depend on user input, calculated here
+function boxGeom_dependentFields(geom) = 
+    let(
+        // === recall independent parameters ===
+        screwBossPrefix = get_param(geom, "screwBossPrefix"), 
+        innerHeight=get_param(geom, "innerHeight"),
+        wallThickness=get_param(geom, "wallThickness"))
+        // === set dependents ===
+            concat(geom, 
+                [[str(screwBossPrefix, ".bossLength"), 
+                innerHeight + 2*wallThickness]]);
+
+module boxTop(geom_){
+    geom = boxGeom_dependentFields(geom_);
+    screwXY=get_param(geom, "screwXY"); 
+    innerHeight=get_param(geom, "innerHeight");
+    wallThickness=get_param(geom, "wallThickness"); 
+    screwBossPrefix = get_param(geom, "screwBossPrefix");
+    screwBossZ = -innerHeight/2 - wallThickness;
+    difference(){
+        // === ADD ===
+        intersection(){
+            union(){
+                // shell
+                caseTop(geom);
+                // screw bosses 
+                for (screw = screwXY){
+                    let(screwX = screw[0], screwY = screw[1]){
+                        translate([screwX, screwY, -screwBossZ])
+                            rotate([0, 180, 0]) // note: screw "top" goes into "bottom" case shell
+                                screwBossBottomAdd(geom, screwBossPrefix);
+                    } // let
+                }; // for screw
+            }; // union (+)
+            // === clip screw butts to outer shell ===
+            caseOuterShell(geom);
+        }; // intersection 
+        // === SUBTRACT ===
+        union(){
+            // cut screw bosses that extend into top-/bottom connection area
+            caseBottom(geom);
+            // cut screw holes
+            for (screw = screwXY){
+                let(screwX = screw[0], screwY = screw[1]){
+                    translate([screwX, screwY, -screwBossZ])
+                        rotate([0, 180, 0])
+                            screwBossSub(geom, screwBossPrefix);            
+                }; // let
+            } // for screw
+        } // union (-)    
+    }; // difference       
+} // module
+
+module boxBottom(geom_){
+    geom = boxGeom_dependentFields(geom_);
+    screwXY=get_param(geom, "screwXY"); 
+    innerHeight=get_param(geom, "innerHeight");
+    wallThickness=get_param(geom, "wallThickness"); 
+    screwBossPrefix = get_param(geom, "screwBossPrefix");
+    screwBossZ = -innerHeight/2 - wallThickness;
+    difference(){
+        // === ADD ===
+        intersection(){
+            union(){
+                // shell
+                caseBottom(geom);
+                // screw bosses 
+                for (screw = screwXY){
+                    let(screwX = screw[0], screwY = screw[1]){
+                        translate([screwX, screwY, -screwBossZ])
+                            rotate([0, 180, 0]) // note: screw "top" goes into "bottom" case shell
+                                screwBossTopAdd(geom, screwBossPrefix);
+                    } // let
+                }; // for screw
+            }; // union (+)
+            // === clip screw head recesses to outer shell ===
+            caseOuterShell(geom);
+        };
+        // === SUBTRACT ===
+        union(){
+            // cut screw bosses that extend into top-/bottom connection area
+            caseTop(geom);
+            // cut screw holes
+            for (screw = screwXY){
+                let(screwX = screw[0], screwY = screw[1]){
+                    translate([screwX, screwY, -screwBossZ])
+                        rotate([0, 180, 0])
+                            screwBossSub(geom, screwBossPrefix);            
+                }; // let
+            } // for screw
+        } // union (-)    
+    }; // difference       
+} // module
+
+module caseBottom(geom){
+    intersection(){
+        caseTopBottom(geom);
+        caseKeepBottom(geom);    
+    }
+}
+
+module caseTop(geom){
+    difference(){
+        caseTopBottom(geom);
+        caseKeepBottom(geom);    
+    }
+}
+
+module caseKeepBottom(geom){
     myInfinity=get_param(geom, "infinity"); 
     eps=get_param(geom, "eps"); 
 	outerRadius=get_param(geom, "outerRadius"); 
     rimThickness = 0.5*get_param(geom, "wallThickness"); 
-    rimHeight = 2.0*get_param(geom, "wallThickness"); 
+    rimHeight = 1.1*get_param(geom, "wallThickness"); 
     innerWidth=get_param(geom, "innerWidth"); 
     innerLength=get_param(geom, "innerLength"); 
 
@@ -35,110 +144,28 @@ module boxShellKeeperBottomA(geom){
     } // union
 } // module
 
-module boxShellKeeperBottom(geom){
-    eps=get_param(geom, "eps"); 
-    screwXY=get_param(geom, "screwXY"); 
-    innerHeight=get_param(geom, "innerHeight");
-    wallThickness=get_param(geom, "wallThickness"); 
-    screwHeadHeight=get_param(geom, "screwHeadHeight"); 
-    screwShaftLength=get_param(geom, "screwShaftLength"); 
-    inf=get_param(geom, "infinity"); 
-
-    // cut the screw bosses where the non-threaded hole ends
-    difference(){
-        boxShellKeeperBottomA(geom);            
-        for (screw = screwXY)
-            let(screwX = screw[0], screwY = screw[1]){
-                h = inf+innerHeight/2+wallThickness-screwHeadHeight-screwShaftLength;
-                translate([screwX, screwY, -inf+2*eps]) // ugly hack
-                    cylinder(h=h, r=screwBossDiam(geom)/2+eps);
-                }
-    }
-}
-
-module screwAdditive(geom, posX, posY){
-    inf=get_param(geom, "infinity"); 
-    eps=get_param(geom, "eps"); 
-    innerHeight=get_param(geom, "innerHeight");
-    screwHeadDiam=get_param(geom, "screwHeadDiam"); 
-    screwHeadHeight=get_param(geom, "screwHeadHeight"); 
-    wallThickness=get_param(geom, "wallThickness"); 
-    shellHeight = innerHeight/2;
-    
-    // screw boss (sufficiently wide for head)
-    bossHeight = innerHeight + 2*wallThickness - 2*eps;
-    translate([posX, posY, -bossHeight/2])
-        cylinder(h=bossHeight, r=screwBossDiam(geom)/2);
-}
-
-function screwBossDiam(geom) = 
-    get_param(geom, "screwHeadDiam")+2*get_param(geom, "wallThickness"); 
-
-module screwSubtractive(geom, posX, posY){
-    inf=get_param(geom, "infinity"); 
-    eps=get_param(geom, "eps"); 
-    wallThickness=get_param(geom, "wallThickness"); 
-    innerHeight=get_param(geom, "innerHeight");
-    screwHeadDiam=get_param(geom, "screwHeadDiam"); 
-    screwHeadHeight=get_param(geom, "screwHeadHeight"); 
-    shellHeight = innerHeight/2;
-
-    // screw head
-    yScrewBottom = shellHeight + wallThickness - screwHeadHeight;
-    translate([posX, posY, yScrewBottom+eps])
-        cylinder(h=screwHeadHeight+eps, r=screwHeadDiam/2);
-
-    // non-threaded screw shaft part
-    screwShaftDiam=get_param(geom, "screwShaftDiam"); 
-    screwShaftLength=get_param(geom, "screwShaftLength"); 
-    screwThreadDiam=get_param(geom, "screwThreadDiam"); 
-    translate([posX, posY, yScrewBottom-screwShaftLength+eps])
-        cylinder(h=screwShaftLength+eps, r=screwShaftDiam/2);
-
-    // threaded screw shaft part
-    translate([posX, posY, -shellHeight+eps])
-        cylinder(h=innerHeight+eps, r=screwThreadDiam/2);
-}
-
-module boxShellKeeperTop(geom){
-    inf=get_param(geom, "infinity"); 
-    eps=get_param(geom, "eps"); 
-    difference(){
-        cube([inf-eps, inf-eps, inf-eps], center=true);
-        boxShellKeeperBottom(geom);
-    } // difference
-} // module
-
-module myCaseBodyWithScrews(geom){
-    screwXY=get_param(geom, "screwXY"); 
-
-    difference(){
-        union(){
-            // first add the case
-            myCaseBody(geom);
-            // then add all the screws
-            for (screw = screwXY)
-                let(screwX = screw[0], screwY = screw[1]){
-                        screwAdditive(geom, screwX, screwY);
-                }; // let            
-            }; // union
-            // 2nd+ arg to difference: then remove all the holes (from screw bosses AND case)
-            for (screw = screwXY)
-                let(screwX = screw[0], screwY = screw[1]){
-                        screwSubtractive(geom, screwX, screwY);
-                } // let
-    } // difference
-}
-
-module myCaseBody(geom){
+module caseOuterShell(geom){
     innerWidth=get_param(geom, "innerWidth"); 
     innerLength=get_param(geom, "innerLength"); 
     innerHeight=get_param(geom, "innerHeight");
     outerRadius=get_param(geom, "outerRadius"); 
     wallThickness=get_param(geom, "wallThickness"); 
-    screwXY=get_param(geom, "screwXY"); 
+
+    bodyBoxPrimitive(innerWidth+2*wallThickness, innerLength+2*wallThickness, innerHeight+2*wallThickness, outerRadius);
+} // module
+
+module caseInnerShell(geom){
+    innerWidth=get_param(geom, "innerWidth"); 
+    innerLength=get_param(geom, "innerLength"); 
+    innerHeight=get_param(geom, "innerHeight");
+    outerRadius=get_param(geom, "outerRadius"); 
+
+    bodyBoxPrimitive(innerWidth, innerLength, innerHeight, outerRadius);
+}
+
+module caseTopBottom(geom){
     difference(){
-		bodyBoxPrimitive(innerWidth+2*wallThickness, innerLength+2*wallThickness, innerHeight+2*wallThickness, outerRadius);
-        bodyBoxPrimitive(innerWidth+0*wallThickness, innerLength+0*wallThickness, innerHeight+0*wallThickness, outerRadius);
+        caseOuterShell(geom);
+        caseInnerShell(geom);
 	}
 };
