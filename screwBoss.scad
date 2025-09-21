@@ -71,6 +71,7 @@ module screwBossTopAdd(geom, prefix){
 // ADDITIVE bottom part of screw boss in positive z direction starting from head (centered on the hex socket's outer end)
 module screwBossBottomAdd(geom, prefix){    
     headHeight = get_param(geom, str(prefix, ".headHeight")); 
+    headWallThickness = get_param(geom, str(prefix, ".headWallThickness")); 
     shankLength = get_param(geom, str(prefix, ".shankLength")); 
     headDiam = get_param(geom, str(prefix, ".headDiam")); 
     shankDiam = get_param(geom, str(prefix, ".shankDiam")); 
@@ -84,7 +85,7 @@ module screwBossBottomAdd(geom, prefix){
     
     union(){
         // standoff around non-threaded screw section(shank)
-        translate([0, 0, headHeight]) // overlaps one wall thickness into screw head recess
+        translate([0, 0, headHeight+headWallThickness]) // overlaps one wall thickness into screw head recess
             cylinder(
                 h = shankLength, 
                 r1 = 1/2*(standoffWallThicknessLo+threadDiam+standoffWallThicknessLo),
@@ -92,9 +93,9 @@ module screwBossBottomAdd(geom, prefix){
         );
         
         // threaded section
-        translate([0, 0, headHeight+shankLength])
+        translate([0, 0, headHeight+headWallThickness+shankLength])
             cylinder(
-                h = bossLength-headHeight-shankLength, 
+                h = bossLength-headHeight-headWallThickness-shankLength, 
                 r1 = 1/2*(standoffWallThicknessLo+threadDiam+standoffWallThicknessLo),
                 r2 = 1/2*(standoffWallThicknessHi+threadDiam+standoffWallThicknessHi)
         );

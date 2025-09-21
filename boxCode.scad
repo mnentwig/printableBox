@@ -25,7 +25,6 @@ function boxGeom_dependentFields(geom) =
 module cutoutsXYR(cutoutsXYR, cutoutZ, cutoutThickness){
     for (cutoutXYR = cutoutsXYR){
         assert(len(cutoutXYR) == 3, "expecting three-field element for cutoutsTopXYR");
-        echo(cutoutXYR);
         let(cutoutX = cutoutXYR[0], cutoutY = cutoutXYR[1], cutoutR = cutoutXYR[2]){
             translate([cutoutX, cutoutY, cutoutZ])
                         linear_extrude(height = cutoutThickness)
