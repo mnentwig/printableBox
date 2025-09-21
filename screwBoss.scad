@@ -19,7 +19,8 @@ module screwBossTest(){
         ["ISO4762_my1.standoffWallThicknessLo", 0.8], // thickness of standoff where the screw enters (minimum torque)
         ["ISO4762_my1.standoffWallThicknessHi", 1.2], // thickness of standoff at boss end (maximum torque)
         ["ISO4762_my1.bossLength", 22],   // total length of screw boss, equals the length of the screw as measured in calipers
-        
+        ["ISO4762_my1.bossPadDiam", 10],
+    
         ["infinity", 345],      // "large number" use reasonable value when working with preview
         ["eps", 0.01]           // "small number" for overlapping solids
     ];
@@ -79,10 +80,11 @@ module screwBossBottomAdd(geom, prefix){
     bossLength = get_param(geom, str(prefix, ".bossLength")); 
     standoffWallThicknessHi = get_param(geom, str(prefix, ".standoffWallThicknessHi")); 
     standoffWallThicknessLo = get_param(geom, str(prefix, ".standoffWallThicknessLo")); 
-    
+    bossPadRadius = 0.5*get_param(geom, str(prefix, ".bossPadDiam")); 
     inf=get_param(geom, "infinity"); //  large number. Usually common to the design - not prefixed
     eps=get_param(geom, "eps"); //  small number. Usually common to the design - not prefixed    
-    
+
+    fudge = [[0.3, 1.0], [0.4, 0.9], [0.5, 0.88], [0.6, 0.83], [0.7, 0.75], [1, 0.5]];
     union(){
         // standoff around non-threaded screw section(shank)
         translate([0, 0, headHeight+headWallThickness]) // overlaps one wall thickness into screw head recess
@@ -99,6 +101,13 @@ module screwBossBottomAdd(geom, prefix){
                 r1 = 1/2*(standoffWallThicknessLo+threadDiam+standoffWallThicknessLo),
                 r2 = 1/2*(standoffWallThicknessHi+threadDiam+standoffWallThicknessHi)
         );
+
+        // boss pad
+        for (f = fudge){
+            echo(f[1]);
+            translate([0, 0, bossLength-bossPadRadius*f[0]])
+                cylinder(h = bossPadRadius*f[0], r1=0, r2=bossPadRadius*f[1]);
+        }// for
     } // union
 }
 

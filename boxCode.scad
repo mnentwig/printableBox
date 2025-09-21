@@ -20,7 +20,7 @@ function boxGeom_dependentFields(geom) =
         // === set dependents ===
             concat(geom, 
                 [[str(screwBossPrefix, ".bossLength"), 
-                innerHeight + 2*wallThickness]]);
+                innerHeight + 1*wallThickness]]);
 
 module cutoutsXYR(cutoutsXYR, cutoutZ, cutoutThickness){
     for (cutoutXYR = cutoutsXYR){

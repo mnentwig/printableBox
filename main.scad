@@ -41,6 +41,7 @@ geom=[
     ["myScrewA.headWallThickness", 1.1], // thickness of screw recess (load bearing!)
     ["myScrewA.standoffWallThicknessLo", 0.8], // thickness of standoff where the screw enters (minimum torque)
     ["myScrewA.standoffWallThicknessHi", 1.2], // thickness of standoff at boss end (maximum torque)
+    ["myScrewA.bossPadDiam", 9], // standoff extension to distribute force (prelim)
     
     // === screws ===
     // (arbitrary number, user placed because application-dependent. 
