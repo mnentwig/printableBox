@@ -1,13 +1,13 @@
 # printableBox
 Parametric openSCAD 3d-printable box generator e.g. electronics case with rounded edges, two shells, an overlapping lid.
 
-###Example
+### Example
 Sample box with screws, cutouts and ribs (all optional features)
 ![](www/completeBox.png)
 
 To run, open "main.scad" in openSCAD and preview or render.
 
-###Features
+### Features
 - Box geometry is freely adjustable in main.scad. 
 
 - Any number of screws can be placed freely (also merged into a rounded edge or corner)
@@ -18,6 +18,7 @@ To run, open "main.scad" in openSCAD and preview or render.
 
 ### Clipping
 Much more complex than envisioned, but hopefully correct (screw boss pads don't stick out, screw heads merge into the wall, cutouts remove ribs underneath)
+
 ![](www/clip1.png)
 
 ![](www/clip2.png)
