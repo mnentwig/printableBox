@@ -1,4 +1,5 @@
 use <screwBoss.scad>
+use <boxRib.scad>
 function get_param(params, key) =
     let (tmp = [for (p = params) if (p[0]==key) p[1]])
         len(tmp) == 1 ? tmp[0] : assert(0, str("parameter '", key, "' not found"));
@@ -45,28 +46,37 @@ module boxTop(geom_){
     eps=get_param(geom, "eps"); 
 
     cutoutsXYR = get_param(geom, "cutoutsTopXYR");
+    ribsInnerThickness=get_param(geom, "ribsInnerThickness"); 
     cutoutEps = 0.1;
     cutoutZ = -innerHeight/2-wallThickness-cutoutEps;
-    cutoutThickness = wallThickness+2*cutoutEps;
+    cutoutThickness = wallThickness+ribsInnerThickness+2*cutoutEps;
 
     difference(){
         // === ADD ===
-        intersection(){
-            union(){
-                // shell
-                caseTop(geom);
-                // screw bosses 
-                for (screw = screwXY){
-                    let(screwX = screw[0], screwY = screw[1]){
-                        translate([screwX, screwY, -screwBossZ])
-                            rotate([0, 180, 0]) // note: screw "top" goes into "bottom" case shell
-                                screwBossBottomAdd(geom, screwBossPrefix);
-                    } // let
-                }; // for screw
-            }; // union (+)
-            // === clip screw butts to outer shell ===
-            caseOuterShell(geom);
-        }; // intersection 
+        union(){
+            intersection(){
+                union(){
+                    // shell
+                    caseTop(geom);
+                    // screw bosses 
+                    for (screw = screwXY){
+                        let(screwX = screw[0], screwY = screw[1]){
+                            translate([screwX, screwY, -screwBossZ])
+                                rotate([0, 180, 0]) // note: screw "top" goes into "bottom" case shell
+                                    screwBossBottomAdd(geom, screwBossPrefix);
+                        } // let
+                    }; // for screw
+                }; // union (+)
+                // === clip screw butts to outer shell ===
+                caseOuterShell(geom);
+            }; // intersection 
+            difference(){
+                // === intersection: ADD ===
+                caseRibs(geom);
+                // === intersection: SUB ===
+                caseKeepBottom(geom);
+            } // difference
+        }; // union
         // === SUBTRACT ===
         union(){
             // cut screw bosses that extend into top-/bottom connection area
@@ -99,22 +109,30 @@ module boxBottom(geom_){
 
     difference(){
         // === ADD ===
-        intersection(){
-            union(){
-                // shell
-                caseBottom(geom);
-                // screw bosses 
-                for (screw = screwXY){
-                    let(screwX = screw[0], screwY = screw[1]){
-                        translate([screwX, screwY, -screwBossZ])
-                            rotate([0, 180, 0]) // note: screw "top" goes into "bottom" case shell
-                                screwBossTopAdd(geom, screwBossPrefix);
-                    } // let
-                }; // for screw
-            }; // union (+)
-            // === clip screw head recesses to outer shell ===
-            caseOuterShell(geom);
-        };
+        union(){
+            intersection(){
+                union(){
+                    // shell
+                    caseBottom(geom);
+                    // screw bosses 
+                    for (screw = screwXY){
+                        let(screwX = screw[0], screwY = screw[1]){
+                            translate([screwX, screwY, -screwBossZ])
+                                rotate([0, 180, 0]) // note: screw "top" goes into "bottom" case shell
+                                    screwBossTopAdd(geom, screwBossPrefix);
+                        } // let
+                    }; // for screw
+                }; // union (+)
+                // === clip screw head recesses to outer shell ===
+                caseOuterShell(geom);
+            }; // intersection
+            intersection(){
+                // === intersection: ADD ===
+                caseRibs(geom);
+                // === intersection: SUB ===
+                caseKeepBottom(geom);
+            } // difference
+        }; // union
         // === SUBTRACT ===
         union(){
             // cut screw bosses that extend into top-/bottom connection area
@@ -195,5 +213,26 @@ module caseTopBottom(geom){
     difference(){
         caseOuterShell(geom);
         caseInnerShell(geom);
-	}
-};
+    }
+}
+
+module caseRibs(geom){
+    wallThickness=get_param(geom, "wallThickness"); 
+    innerWidth=get_param(geom, "innerWidth"); 
+    innerLength=get_param(geom, "innerLength"); 
+    innerHeight=get_param(geom, "innerHeight");
+    outerRadius=get_param(geom, "outerRadius"); 
+    ribsInnerThickness=get_param(geom, "ribsInnerThickness"); 
+    ribsInnerX=get_param(geom, "ribsInnerX"); 
+    ribsInnerY=get_param(geom, "ribsInnerY"); 
+    for (ribY = ribsInnerY){
+        translate([0, ribY, 0])
+            rotate([90, 0, 0])
+                boxRib(innerWidth-2*ribsInnerThickness, innerHeight-2*ribsInnerThickness, ribsInnerThickness, outerRadius);
+    }; // for
+    for (ribX = ribsInnerX){
+        translate([ribX, 0, 0])
+            rotate([90, 0, 90])
+                boxRib(innerLength-2*ribsInnerThickness, innerHeight-2*ribsInnerThickness, ribsInnerThickness, outerRadius);
+    }; // for
+}
