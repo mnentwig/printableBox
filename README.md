@@ -37,9 +37,9 @@ No real issues in half a dozen test prints at different design stages (Prusa Cor
 
 Lessons learned: 
 - Use the shortest practical thread length. If longer screws have to be used, the "shank" setting provides a non-threaded hole for most of the screw length (which creates less stress on the screw boss and is more convenient to assemble).
-- Shells may not be joined by force, as the final edge may break. Slightly breaking the corners with a carpet knife avoids this problem. 
+- Shells may not be joined by force, as the final corner may splinter. Slightly breaking each shell's corners (outside-/inside) with a carpet knife avoids this problem. 
 - Assembly technique tends to improve with practice :-)
-- Strategically placed ribs will significantly improve stiffness
+- Strategically placed ribs will significantly improve stiffness.
 
 
 
